@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eye Canvas</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="eyeCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('eyeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        const centralEyeRadius = 30;
+        const numEyes = 50;
+
+        const eyes = [];
+
+        function drawEye(x, y, radius, irisColor, pupilSize, lookAtX = 0, lookAtY = 0) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = irisColor;
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius / 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.closePath();
+
+            const dx = lookAtX - x; 
+            const dy = lookAtY - y; 
+            const angle = Math.atan2(dy, dx);
+
+            const pupilX = x + Math.cos(angle) * ((radius - pupilSize) / 2.5);
+            const pupilY = y + Math.sin(angle) * ((radius - pupilSize) / 2.5);
+            ctx.beginPath();
+            ctx.arc(pupilX, pupilY, pupilSize, 0, Math.PI * 2);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function lookAt(eyeX, eyeY, targetX, targetY) {
+            const dx = targetX - eyeX;
+            const dy = targetY - eyeY;
+            const angle = Math.atan2(dy, dx);
+            return angle;
+        }
+
+        function generateRandomEyePosition() {
+            let eyeX, eyeY;
+            do {
+                eyeX = centerX + Math.random() * 500 - 250;
+                eyeY = centerY + Math.random() * 250 - 300; 
+            } while (eyes.some(eye => Math.hypot(eyeX - eye.x, eyeY - eye.y) < 30)); 
+            return { x: eyeX, y: eyeY };
+        }
+
+        function draw() {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawEye(centerX, centerY, centralEyeRadius, '#66ccff', 10, centerX, centerY - 100);
+            eyes.push({ x: centerX, y: centerY - 100 });
+
+            for (let i = 0; i < numEyes; i++) {
+                const { x: eyeX, y: eyeY } = generateRandomEyePosition();
+                const irisColor = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`; // Random iris color
+                const pupilSize = Math.random() * 4 + 3; 
+
+                drawEye(eyeX, eyeY, 15, irisColor, pupilSize, centerX, centerY);
+                eyes.push({ x: eyeX, y: eyeY });
+
+                const eyeAngle = lookAt(eyeX, eyeY, centerX, centerY);
+                const targetX = eyeX + Math.cos(eyeAngle) * 10;
+                const targetY = eyeY + Math.sin(eyeAngle) * 10;
+                drawEye(eyeX, eyeY, 15, irisColor, pupilSize, centerX, centerY);
+            }
+        }
+
+        draw();
+    </script>
+</body>
+</html>

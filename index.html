@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanks!</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css">
+  <style>
+    body{
+      margin: 0;
+      font-family: 'Courier New', Courier, monospace;
+      background: #1e1e2e;
+      color: #a6adc8;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      padding: 0;
+    }
+
+    .xterm .xterm-viewport{
+      background: #1e1e2e !important;
+      color: #a6adc8;
+    }
+
+    #container {
+      display: flex;
+      flex-grow: 1;
+    }
+
+    .terminal {
+      flex: 1;
+      height: 100%;
+      padding: 10px;
+    }
+
+    #hidden{
+      display: none;
+    }
+
+    #terminal-1{
+      max-width: 320px;
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="container">
+    <div id="terminal-1" class="terminal"></div>
+    <div id="terminal-2" class="terminal"></div>
+  </div>
+
+  <div id="hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+  <script>
+    const Terminal = window.Terminal;
+    
+    async function typeInTerminal(term, text, delay = 100, split, lineBreak = true) {
+      for (const char of (split ? text.split(' ') :text)) {
+        term.write(split ? ' '+char :char);
+        await new Promise(r => setTimeout(r, delay));
+      }
+      if(lineBreak) term.write('\r\n');
+    }
+
+    async function loadJsonFile(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to load ${url}`);
+      return await response.json();
+    }
+
+    async function loadTextFile(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to load ${url}`);
+      return await response.text();
+    }
+    
+    const terminal1 = new Terminal({ cursorBlink: true });
+    const terminal2 = new Terminal({ cursorBlink: true });
+
+    terminal1.open(document.getElementById('terminal-1'));
+    terminal2.open(document.getElementById('terminal-2'));
+    // <img class="tgme_page_photo_image" >
+    // Animate terminal 1
+    (async () => {
+      await typeInTerminal(terminal1, '\x1b[1;32m$ \x1b[36mcat\x1b[0;37m /greatstuff/people.json');
+      const people = await loadJsonFile('./people.json');
+      for (const person of people) {// https://t.me/${username}
+        await typeInTerminal(terminal1, `- \x1b[1;4;35m${person}\x1b[0;37m`, 1);
+      }
+      terminal1.write('\x1b[1;32m$ ');
+    })();
+
+    (async () => {
+      await typeInTerminal(terminal2, '\x1b[1;32m$ \x1b[36mcat\x1b[0;37m /thanks.txt');
+      const thanksText = await loadTextFile('./thanks.txt');
+      await typeInTerminal(terminal2, thanksText.replace(/\n/g, '\r\n').replace(/\\x1b/g, '\x1b'), 50, true);
+      terminal2.write('\x1b[1;32m$ ');
+    })();
+
+  </script>
+
+</body>
+</html>
